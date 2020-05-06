@@ -22,8 +22,8 @@ import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.StringDef;
 import android.util.Log;
 import android.view.View;
 
@@ -286,6 +286,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
     @Override
     public void onHostResume() {
+        Log.i("CustomTwilioVideoView", "On Host Resume");
         /*
          * In case it wasn't set.
          */
@@ -308,6 +309,12 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
                 if (localParticipant != null) {
                     localParticipant.publishTrack(localVideoTrack);
                 }
+
+
+                // enabling back the audio on resume
+                localAudioTrack.enable(true);
+                // enable local video track on resume
+                toggleVideo(true);
             }
 
             themedReactContext.getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
@@ -322,19 +329,21 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
          * Release the local video track before going in the background. This ensures that the
          * camera can be used by other applications while this app is in the background.
          */
-        // if (localVideoTrack != null) {
-        //     /*
-        //      * If this local video track is being shared in a Room, remove from local
-        //      * participant before releasing the video track. Participants will be notified that
-        //      * the track has been removed.
-        //      */
-        //     if (localParticipant != null) {
-        //         localParticipant.unpublishTrack(localVideoTrack);
-        //     }
+         if (localVideoTrack != null) {
+             /*
+              * If this local video track is being shared in a Room, remove from local
+              * participant before releasing the video track. Participants will be notified that
+              * the track has been removed.
+              */
+//             if (localParticipant != null) {
+//                 localParticipant.unpublishTrack(localVideoTrack);
+//             }
 
-        //     localVideoTrack.release();
-        //     localVideoTrack = null;
-        // }
+             // disable local video on background
+             toggleVideo(false);
+             // disable audio tracks on background
+             localAudioTrack.enable(false);
+         }
     }
 
     @Override
@@ -352,15 +361,16 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         /*
          * Release the local media ensuring any memory allocated to audio or video is freed.
          */
-        // if (localVideoTrack != null) {
-        //     localVideoTrack.release();
-        //     localVideoTrack = null;
-        // }
+//         if (localVideoTrack != null) {
+//             localVideoTrack.release();
+//             localVideoTrack = null;
+//         }
 
-        // if (localAudioTrack != null) {
-        //     localAudioTrack.release();
-        //     localAudioTrack = null;
-        // }
+         if (localAudioTrack != null) {
+             localAudioTrack.release();
+             localAudioTrack = null;
+         }
+        localAudioTrack.enable(false);
 
         // Quit the data track message thread
         // dataTrackMessageThread.quit();
