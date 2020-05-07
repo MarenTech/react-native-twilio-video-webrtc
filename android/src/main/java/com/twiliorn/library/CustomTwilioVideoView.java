@@ -300,6 +300,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
             if (localVideoTrack != null) {
                 if (thumbnailVideoView != null) {
+                    localVideoTrack = LocalVideoTrack.create(getContext(), true, cameraCapturer, buildVideoConstraints());
                     localVideoTrack.addRenderer(thumbnailVideoView);
                 }
 
@@ -310,11 +311,12 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
                     localParticipant.publishTrack(localVideoTrack);
                 }
 
-
                 // enabling back the audio on resume
                 localAudioTrack.enable(true);
-                // enable local video track on resume
-                toggleVideo(true);
+
+//                // below lines are not required as unpublishing localparticipant on host pause
+//                // enable local video track on resume
+//                toggleVideo(true);
             }
 
             themedReactContext.getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
@@ -335,12 +337,14 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
               * participant before releasing the video track. Participants will be notified that
               * the track has been removed.
               */
-//             if (localParticipant != null) {
-//                 localParticipant.unpublishTrack(localVideoTrack);
-//             }
+             if (localParticipant != null) {
+                 localParticipant.unpublishTrack(localVideoTrack);
+             }
 
-             // disable local video on background
-             toggleVideo(false);
+             // disabling local video on background not required as unpublishing track on background
+//             // disable local video on background
+//             toggleVideo(false);
+
              // disable audio tracks on background
              localAudioTrack.enable(false);
          }
@@ -353,10 +357,10 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
          * Always disconnect from the room before leaving the Activity to
          * ensure any memory allocated to the Room resource is freed.
          */
-        // if (room != null && room.getState() != Room.State.DISCONNECTED) {
-        //     room.disconnect();
-        //     disconnectedFromOnDestroy = true;
-        // }
+         if (room != null && room.getState() != Room.State.DISCONNECTED) {
+             room.disconnect();
+             disconnectedFromOnDestroy = true;
+         }
 
         /*
          * Release the local media ensuring any memory allocated to audio or video is freed.
@@ -370,7 +374,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
              localAudioTrack.release();
              localAudioTrack = null;
          }
-        localAudioTrack.enable(false);
+//        localAudioTrack.enable(false);
 
         // Quit the data track message thread
         // dataTrackMessageThread.quit();
